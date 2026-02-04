@@ -1,0 +1,59 @@
+sequenceDiagram
+    participant User as 用户
+    participant Channel as 渠道<br/>(Telegram/WhatsApp/CLI)
+    participant Bus as 消息总线
+    participant Agent as Agent循环
+    participant Context as 上下文构建器
+    participant LLM as LLM提供商
+    participant Tools as 工具注册表
+    participant Session as 会话管理器
+    
+    %% 用户发送消息
+    User->>Channel: 发送消息
+    Channel->>Bus: 发布入站消息<br/>InboundMessage
+    
+    %% Agent处理消息
+    Bus->>Agent: 消费入站消息
+    Agent->>Session: 获取或创建会话
+    Session-->>Agent: 返回会话对象
+    
+    %% 构建上下文
+    Agent->>Context: 构建消息列表
+    Context->>Context: 加载系统提示词
+    Context->>Context: 加载历史记录
+    Context->>Context: 加载记忆和技能
+    Context-->>Agent: 返回完整消息列表
+    
+    %% Agent循环开始
+    rect rgb(255, 250, 205)
+        Note over Agent,Tools: Agent循环（最多20次迭代）
+        
+        %% 第一次LLM调用
+        Agent->>LLM: 调用LLM<br/>(messages + tools)
+        LLM-->>Agent: 返回响应<br/>(可能包含tool_calls)
+        
+        alt 有工具调用
+            Agent->>Tools: 执行工具1
+            Tools-->>Agent: 返回结果1
+            Agent->>Tools: 执行工具2
+            Tools-->>Agent: 返回结果2
+            
+            Note over Agent: 将工具结果添加到消息历史
+            
+            Agent->>LLM: 再次调用LLM<br/>(包含工具结果)
+            LLM-->>Agent: 返回响应
+        else 无工具调用
+            Note over Agent: 得到最终答案，退出循环
+        end
+    end
+    
+    %% 保存会话
+    Agent->>Session: 保存对话历史
+    
+    %% 返回响应
+    Agent->>Bus: 发布出站消息<br/>OutboundMessage
+    Bus->>Channel: 分发消息
+    Channel->>User: 发送响应
+    
+    %% 样式
+    Note over User,Session: 完整的消息处理流程

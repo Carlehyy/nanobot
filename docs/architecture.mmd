@@ -1,0 +1,103 @@
+graph TB
+    subgraph "用户交互层 (User Interface Layer)"
+        CLI[CLI命令行]
+        TG[Telegram]
+        WA[WhatsApp]
+        OTHER[其他渠道...]
+    end
+    
+    subgraph "消息总线层 (Message Bus Layer)"
+        INBOUND[入站队列<br/>InboundQueue]
+        OUTBOUND[出站队列<br/>OutboundQueue]
+        DISPATCHER[消息分发器<br/>Dispatcher]
+    end
+    
+    subgraph "Agent核心层 (Agent Core Layer)"
+        LOOP[Agent循环<br/>AgentLoop]
+        CONTEXT[上下文构建器<br/>ContextBuilder]
+        TOOLS[工具注册表<br/>ToolRegistry]
+        SUBAGENT[子Agent管理器<br/>SubagentManager]
+    end
+    
+    subgraph "工具系统 (Tool System)"
+        FILE[文件操作<br/>ReadFile/WriteFile/EditFile]
+        SHELL[Shell执行<br/>ExecTool]
+        WEB[Web工具<br/>Search/Fetch]
+        MSG[消息工具<br/>MessageTool]
+        SPAWN[子Agent生成<br/>SpawnTool]
+    end
+    
+    subgraph "支持服务层 (Support Services)"
+        SESSION[会话管理<br/>SessionManager]
+        MEMORY[记忆存储<br/>MemoryStore]
+        SKILLS[技能加载<br/>SkillsLoader]
+        PROVIDER[LLM提供商<br/>LiteLLM]
+    end
+    
+    subgraph "基础设施层 (Infrastructure)"
+        CONFIG[配置管理<br/>ConfigLoader]
+        CRON[定时任务<br/>CronService]
+        HEARTBEAT[心跳服务<br/>HeartbeatService]
+    end
+    
+    %% 用户输入流
+    CLI -->|发布消息| INBOUND
+    TG -->|发布消息| INBOUND
+    WA -->|发布消息| INBOUND
+    OTHER -->|发布消息| INBOUND
+    
+    %% Agent处理流
+    INBOUND -->|消费消息| LOOP
+    LOOP -->|构建上下文| CONTEXT
+    LOOP -->|执行工具| TOOLS
+    LOOP -->|生成子Agent| SUBAGENT
+    LOOP -->|发布响应| OUTBOUND
+    
+    %% 上下文构建
+    CONTEXT -->|加载记忆| MEMORY
+    CONTEXT -->|加载技能| SKILLS
+    CONTEXT -->|获取历史| SESSION
+    
+    %% 工具执行
+    TOOLS -->|注册| FILE
+    TOOLS -->|注册| SHELL
+    TOOLS -->|注册| WEB
+    TOOLS -->|注册| MSG
+    TOOLS -->|注册| SPAWN
+    
+    %% LLM调用
+    LOOP -->|调用LLM| PROVIDER
+    SUBAGENT -->|调用LLM| PROVIDER
+    
+    %% 响应输出流
+    OUTBOUND -->|分发| DISPATCHER
+    DISPATCHER -->|发送响应| CLI
+    DISPATCHER -->|发送响应| TG
+    DISPATCHER -->|发送响应| WA
+    DISPATCHER -->|发送响应| OTHER
+    
+    %% 子Agent通知
+    SUBAGENT -.->|系统消息| INBOUND
+    
+    %% 配置加载
+    CONFIG -.->|配置| LOOP
+    CONFIG -.->|配置| PROVIDER
+    
+    %% 定时任务
+    CRON -.->|触发| INBOUND
+    HEARTBEAT -.->|唤醒| INBOUND
+    
+    %% 样式定义
+    classDef userLayer fill:#E1F5FE,stroke:#01579B,stroke-width:2px
+    classDef busLayer fill:#F3E5F5,stroke:#4A148C,stroke-width:2px
+    classDef coreLayer fill:#FFF9C4,stroke:#F57F17,stroke-width:2px
+    classDef toolLayer fill:#E8F5E9,stroke:#1B5E20,stroke-width:2px
+    classDef serviceLayer fill:#FFE0B2,stroke:#E65100,stroke-width:2px
+    classDef infraLayer fill:#ECEFF1,stroke:#263238,stroke-width:2px
+    
+    class CLI,TG,WA,OTHER userLayer
+    class INBOUND,OUTBOUND,DISPATCHER busLayer
+    class LOOP,CONTEXT,TOOLS,SUBAGENT coreLayer
+    class FILE,SHELL,WEB,MSG,SPAWN toolLayer
+    class SESSION,MEMORY,SKILLS,PROVIDER serviceLayer
+    class CONFIG,CRON,HEARTBEAT infraLayer

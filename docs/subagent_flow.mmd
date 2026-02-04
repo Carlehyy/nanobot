@@ -1,0 +1,59 @@
+sequenceDiagram
+    participant User as 用户
+    participant MainAgent as 主Agent
+    participant SubMgr as 子Agent管理器
+    participant SubAgent as 子Agent
+    participant Tools as 工具系统
+    participant LLM as LLM提供商
+    participant Bus as 消息总线
+    
+    %% 用户请求复杂任务
+    User->>MainAgent: 发送复杂任务请求<br/>"分析最近一周的日志"
+    
+    %% 主Agent决定使用子Agent
+    MainAgent->>LLM: 调用LLM判断任务
+    LLM-->>MainAgent: 返回tool_call: spawn
+    
+    %% 生成子Agent
+    MainAgent->>SubMgr: spawn(task, label, origin)
+    SubMgr->>SubMgr: 生成任务ID<br/>task_id = uuid[:8]
+    SubMgr->>SubAgent: 创建后台任务<br/>asyncio.create_task()
+    SubMgr-->>MainAgent: 返回状态消息<br/>"Subagent started..."
+    
+    %% 主Agent通知用户
+    MainAgent->>User: "子任务已启动，<br/>完成后会通知你"
+    
+    %% 子Agent异步执行
+    rect rgb(255, 250, 205)
+        Note over SubAgent,LLM: 子Agent后台执行（异步）
+        
+        SubAgent->>SubAgent: 构建专用工具集<br/>（无message和spawn）
+        SubAgent->>SubAgent: 构建专注提示词
+        
+        loop Agent循环（最多15次）
+            SubAgent->>LLM: 调用LLM
+            LLM-->>SubAgent: 返回响应
+            
+            alt 有工具调用
+                SubAgent->>Tools: 执行工具
+                Tools-->>SubAgent: 返回结果
+            else 无工具调用
+                Note over SubAgent: 得到最终结果
+            end
+        end
+    end
+    
+    %% 子Agent完成并通知
+    SubAgent->>SubAgent: 收集最终结果
+    SubAgent->>Bus: 发布系统消息<br/>channel: "system"<br/>chat_id: "origin_channel:origin_chat_id"
+    
+    %% 主Agent接收通知
+    Bus->>MainAgent: 消费系统消息
+    MainAgent->>LLM: 处理子Agent结果<br/>生成用户友好摘要
+    LLM-->>MainAgent: 返回摘要
+    
+    %% 通知用户
+    MainAgent->>User: "日志分析完成！<br/>发现3个警告和1个错误"
+    
+    %% 样式
+    Note over User,Bus: 子Agent完整交互流程

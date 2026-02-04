@@ -1,0 +1,87 @@
+flowchart TD
+    START([LLM返回tool_calls])
+    
+    %% 工具调用处理
+    PARSE_CALLS[解析tool_calls列表]
+    ADD_TO_HISTORY[将助手消息添加到历史<br/>包含tool_calls]
+    
+    %% 遍历工具调用
+    LOOP_START{还有工具<br/>需要执行?}
+    GET_CALL[获取下一个tool_call<br/>id + name + arguments]
+    
+    %% 工具查找
+    FIND_TOOL[在ToolRegistry中查找工具]
+    TOOL_EXISTS{工具<br/>存在?}
+    ERROR_NOT_FOUND[返回错误:<br/>Tool not found]
+    
+    %% 参数验证
+    VALIDATE_PARAMS[验证参数<br/>validate_params]
+    PARAMS_VALID{参数<br/>有效?}
+    ERROR_INVALID[返回错误:<br/>Invalid parameters]
+    
+    %% 工具执行
+    EXECUTE_TOOL[执行工具<br/>await tool.execute]
+    EXECUTION_OK{执行<br/>成功?}
+    GET_RESULT[获取执行结果<br/>result: str]
+    ERROR_EXECUTION[捕获异常<br/>返回错误信息]
+    
+    %% 结果处理
+    ADD_RESULT[将工具结果添加到历史<br/>role: tool<br/>tool_call_id: id<br/>content: result]
+    
+    %% 继续循环
+    LOOP_END[继续下一个工具]
+    
+    %% 完成
+    ALL_DONE[所有工具执行完成]
+    NEXT_LLM_CALL[再次调用LLM<br/>包含工具结果]
+    END([返回LLM响应])
+    
+    %% 流程连接
+    START --> PARSE_CALLS
+    PARSE_CALLS --> ADD_TO_HISTORY
+    ADD_TO_HISTORY --> LOOP_START
+    
+    LOOP_START -->|是| GET_CALL
+    LOOP_START -->|否| ALL_DONE
+    
+    GET_CALL --> FIND_TOOL
+    FIND_TOOL --> TOOL_EXISTS
+    
+    TOOL_EXISTS -->|否| ERROR_NOT_FOUND
+    ERROR_NOT_FOUND --> ADD_RESULT
+    
+    TOOL_EXISTS -->|是| VALIDATE_PARAMS
+    VALIDATE_PARAMS --> PARAMS_VALID
+    
+    PARAMS_VALID -->|否| ERROR_INVALID
+    ERROR_INVALID --> ADD_RESULT
+    
+    PARAMS_VALID -->|是| EXECUTE_TOOL
+    EXECUTE_TOOL --> EXECUTION_OK
+    
+    EXECUTION_OK -->|否| ERROR_EXECUTION
+    ERROR_EXECUTION --> ADD_RESULT
+    
+    EXECUTION_OK -->|是| GET_RESULT
+    GET_RESULT --> ADD_RESULT
+    
+    ADD_RESULT --> LOOP_END
+    LOOP_END --> LOOP_START
+    
+    ALL_DONE --> NEXT_LLM_CALL
+    NEXT_LLM_CALL --> END
+    
+    %% 样式定义
+    classDef parseStyle fill:#E3F2FD,stroke:#1976D2,stroke-width:2px
+    classDef loopStyle fill:#FFF9C4,stroke:#F57F17,stroke-width:2px
+    classDef toolStyle fill:#E8F5E9,stroke:#388E3C,stroke-width:2px
+    classDef errorStyle fill:#FFEBEE,stroke:#C62828,stroke-width:2px
+    classDef resultStyle fill:#F3E5F5,stroke:#7B1FA2,stroke-width:2px
+    classDef decisionStyle fill:#FFCCBC,stroke:#BF360C,stroke-width:2px
+    
+    class PARSE_CALLS,ADD_TO_HISTORY parseStyle
+    class GET_CALL,LOOP_END loopStyle
+    class FIND_TOOL,VALIDATE_PARAMS,EXECUTE_TOOL,GET_RESULT toolStyle
+    class ERROR_NOT_FOUND,ERROR_INVALID,ERROR_EXECUTION errorStyle
+    class ADD_RESULT,ALL_DONE,NEXT_LLM_CALL resultStyle
+    class LOOP_START,TOOL_EXISTS,PARAMS_VALID,EXECUTION_OK decisionStyle

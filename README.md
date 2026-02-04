@@ -1,100 +1,125 @@
+# nanobot: 超轻量级个人AI助手 (中文版)
+
 <div align="center">
   <img src="nanobot_logo.png" alt="nanobot" width="500">
-  <h1>nanobot: Ultra-Lightweight Personal AI Assistant</h1>
+  <h1>nanobot: 超轻量级个人AI助手</h1>
   <p>
     <a href="https://pypi.org/project/nanobot-ai/"><img src="https://img.shields.io/pypi/v/nanobot-ai" alt="PyPI"></a>
-    <a href="https://pepy.tech/project/nanobot-ai"><img src="https://static.pepy.tech/badge/nanobot-ai" alt="Downloads"></a>
+    <a href="https://pepy.tech/project/nanobot-ai"><img src="https://static.pepy.tech/badge/nanobot-ai" alt="下载量"></a>
     <img src="https://img.shields.io/badge/python-≥3.11-blue" alt="Python">
-    <img src="https://img.shields.io/badge/license-MIT-green" alt="License">
-    <a href="./COMMUNICATION.md"><img src="https://img.shields.io/badge/Feishu-Group-E9DBFC?style=flat&logo=feishu&logoColor=white" alt="Feishu"></a>
-    <a href="./COMMUNICATION.md"><img src="https://img.shields.io/badge/WeChat-Group-C5EAB4?style=flat&logo=wechat&logoColor=white" alt="WeChat"></a>
-    <a href="https://discord.gg/MnCvHqpUGB"><img src="https://img.shields.io/badge/Discord-Community-5865F2?style=flat&logo=discord&logoColor=white" alt="Discord"></a>
+    <img src="https://img.shields.io/badge/license-MIT-green" alt="许可证">
+    <a href="./COMMUNICATION.md"><img src="https://img.shields.io/badge/飞书-交流群-E9DBFC?style=flat&logo=feishu&logoColor=white" alt="飞书"></a>
+    <a href="./COMMUNICATION.md"><img src="https://img.shields.io/badge/微信-交流群-C5EAB4?style=flat&logo=wechat&logoColor=white" alt="微信"></a>
+    <a href="https://discord.gg/MnCvHqpUGB"><img src="https://img.shields.io/badge/Discord-社区-5865F2?style=flat&logo=discord&logoColor=white" alt="Discord"></a>
   </p>
 </div>
 
-🐈 **nanobot** is an **ultra-lightweight** personal AI assistant inspired by [Clawdbot](https://github.com/openclaw/openclaw) 
+---
 
-⚡️ Delivers core agent functionality in just **~4,000** lines of code — **99% smaller** than Clawdbot's 430k+ lines.
+🐈 **nanobot** 是一个**超轻量级**的个人AI助手框架，灵感来源于 [Clawdbot](https://github.com/openclaw/openclaw)。
 
-## 📢 News
+⚡️ 仅用 **~5,000行** Python代码实现了完整的Agent核心功能，比Clawdbot的43万多行代码**小99%**。
 
-- **2026-02-01** 🎉 nanobot launched! Welcome to try 🐈 nanobot!
+这个版本是在原项目基础上添加了**详细的中文注释**和**架构图**，旨在帮助开发者更好地学习和理解AI Agent的实现原理。
 
-## Key Features of nanobot:
+## 核心特性
 
-🪶 **Ultra-Lightweight**: Just ~4,000 lines of code — 99% smaller than Clawdbot - core functionality.
+- 🪶 **超轻量**: 仅约5000行代码，易于学习和修改。
+- 🔬 **研究友好**: 干净、可读的代码，是AI Agent研究的理想起点。
+- ⚡️ **闪电启动**: 极小的代码体积意味着更快的启动速度和更低的资源占用。
+- 💎 **易于使用**: 一键安装，快速上手。
+- 🧩 **模块化设计**: 清晰的架构分层，各模块职责明确。
+- 🔌 **可扩展**: 支持自定义工具、技能和渠道。
 
-🔬 **Research-Ready**: Clean, readable code that's easy to understand, modify, and extend for research.
+## 🏗️ 整体架构
 
-⚡️ **Lightning Fast**: Minimal footprint means faster startup, lower resource usage, and quicker iterations.
-
-💎 **Easy-to-Use**: One-click to depoly and you're ready to go.
-
-## 🏗️ Architecture
+nanobot采用分层、模块化的设计，核心组件之间通过消息总线解耦，具有高度的灵活性和可扩展性。
 
 <p align="center">
-  <img src="nanobot_arch.png" alt="nanobot architecture" width="800">
+  <img src="docs/architecture.png" alt="nanobot 整体架构图" width="800">
 </p>
 
-## ✨ Features
+| 层次 | 核心模块 | 主要职责 |
+| :--- | :--- | :--- |
+| **用户交互层** | `channels` | 负责与用户通过不同渠道（CLI、Telegram、WhatsApp）进行交互。 |
+| **消息总线层** | `bus` | 异步消息队列，解耦渠道和Agent核心，实现发布-订阅模式。 |
+| **Agent核心层** | `agent` | 实现Agent的核心逻辑，包括主循环、上下文构建、工具调用和子Agent管理。 |
+| **工具系统** | `agent/tools` | 提供Agent与外部世界交互的能力，如文件操作、Web搜索等。 |
+| **支持服务层** | `session`, `memory`, `skills`, `providers` | 提供会话管理、记忆存储、技能加载和LLM调用等支持功能。 |
+| **基础设施层** | `config`, `cron`, `heartbeat` | 提供配置管理、定时任务和心跳唤醒等底层服务。 |
 
-<table align="center">
-  <tr align="center">
-    <th><p align="center">📈 24/7 Real-Time Market Analysis</p></th>
-    <th><p align="center">🚀 Full-Stack Software Engineer</p></th>
-    <th><p align="center">📅 Smart Daily Routine Manager</p></th>
-    <th><p align="center">📚 Personal Knowledge Assistant</p></th>
-  </tr>
-  <tr>
-    <td align="center"><p align="center"><img src="case/search.gif" width="180" height="400"></p></td>
-    <td align="center"><p align="center"><img src="case/code.gif" width="180" height="400"></p></td>
-    <td align="center"><p align="center"><img src="case/scedule.gif" width="180" height="400"></p></td>
-    <td align="center"><p align="center"><img src="case/memory.gif" width="180" height="400"></p></td>
-  </tr>
-  <tr>
-    <td align="center">Discovery • Insights • Trends</td>
-    <td align="center">Develop • Deploy • Scale</td>
-    <td align="center">Schedule • Automate • Organize</td>
-    <td align="center">Learn • Memory • Reasoning</td>
-  </tr>
-</table>
+## 核心流程
 
-## 📦 Install
+### 1. 消息处理流程
 
-**Install from source** (latest features, recommended for development)
+下图展示了从用户发送消息到Agent返回响应的完整流程：
+
+<p align="center">
+  <img src="docs/message_flow.png" alt="nanobot 消息处理流程图" width="800">
+</p>
+
+### 2. Agent主循环
+
+Agent的核心是一个循环，它不断调用LLM并根据LLM的响应执行工具，直到任务完成。
+
+<p align="center">
+  <img src="docs/agent_loop.png" alt="nanobot Agent主循环流程图" width="800">
+</p>
+
+### 3. 子Agent交互
+
+对于复杂或耗时的任务，主Agent可以生成一个子Agent在后台处理，并通过系统消息获取结果。
+
+<p align="center">
+  <img src="docs/subagent_flow.png" alt="nanobot 子Agent交互流程图" width="800">
+</p>
+
+### 4. 工具执行流程
+
+当LLM决定调用工具时，`ToolRegistry`会负责查找、验证和执行工具，并将结果返回给LLM。
+
+<p align="center">
+  <img src="docs/tool_execution.png" alt="nanobot 工具执行流程图" width="800">
+</p>
+
+## 📦 安装
+
+**从源码安装** (推荐，可查看中文注释)
 
 ```bash
-git clone https://github.com/HKUDS/nanobot.git
+git clone https://github.com/Carlehyy/nanobot.git
 cd nanobot
+# 切换到中文注释分支
+git checkout study 
 pip install -e .
 ```
 
-**Install with [uv](https://github.com/astral-sh/uv)** (stable, fast)
+**使用 [uv](https://github.com/astral-sh/uv) 安装** (稳定、快速)
 
 ```bash
 uv tool install nanobot-ai
 ```
 
-**Install from PyPI** (stable)
+**从 PyPI 安装** (稳定版)
 
 ```bash
 pip install nanobot-ai
 ```
 
-## 🚀 Quick Start
+## 🚀 快速开始
 
 > [!TIP]
-> Set your API key in `~/.nanobot/config.json`.
-> Get API keys: [OpenRouter](https://openrouter.ai/keys) (LLM) · [Brave Search](https://brave.com/search/api/) (optional, for web search)
-> You can also change the model to `minimax/minimax-m2` for lower cost.
+> 在 `~/.nanobot/config.json` 中设置你的API密钥。
+> 获取API密钥: [OpenRouter](https://openrouter.ai/keys) (LLM) · [Brave Search](https://brave.com/search/api/) (可选, 用于Web搜索)
+> 你也可以将模型更改为 `minimax/minimax-m2` 以降低成本。
 
-**1. Initialize**
+**1. 初始化**
 
 ```bash
 nanobot onboard
 ```
 
-**2. Configure** (`~/.nanobot/config.json`)
+**2. 配置** (`~/.nanobot/config.json`)
 
 ```json
 {
@@ -118,302 +143,44 @@ nanobot onboard
 }
 ```
 
-
-**3. Chat**
-
-```bash
-nanobot agent -m "What is 2+2?"
-```
-
-That's it! You have a working AI assistant in 2 minutes.
-
-## 🖥️ Local Models (vLLM)
-
-Run nanobot with your own local models using vLLM or any OpenAI-compatible server.
-
-**1. Start your vLLM server**
+**3. 对话**
 
 ```bash
-vllm serve meta-llama/Llama-3.1-8B-Instruct --port 8000
+nanobot agent -m "2+2等于几？"
 ```
 
-**2. Configure** (`~/.nanobot/config.json`)
+就是这样！你在2分钟内拥有了一个可工作的AI助手。
 
-```json
-{
-  "providers": {
-    "vllm": {
-      "apiKey": "dummy",
-      "apiBase": "http://localhost:8000/v1"
-    }
-  },
-  "agents": {
-    "defaults": {
-      "model": "meta-llama/Llama-3.1-8B-Instruct"
-    }
-  }
-}
-```
+## 🤝 贡献 & 路线图
 
-**3. Chat**
+欢迎提交PR！代码库被有意设计得小而可读。🤗
 
-```bash
-nanobot agent -m "Hello from my local LLM!"
-```
+**路线图** — 选择一个任务并[提交PR](https://github.com/Carlehyy/nanobot/pulls)！
 
-> [!TIP]
-> The `apiKey` can be any non-empty string for local servers that don't require authentication.
+- [x] **语音转录** — 支持Groq Whisper (Issue #13)
+- [ ] **多模态** — 能看能听（图片、语音、视频）
+- [ ] **长期记忆** — 永不忘记重要上下文
+- [ ] **更好的推理** — 多步规划和反思
+- [ ] **更多集成** — Discord、Slack、邮件、日历
+- [ ] **自我提升** — 从反馈和错误中学习
 
-## 💬 Chat Apps
-
-Talk to your nanobot through Telegram or WhatsApp — anytime, anywhere.
-
-| Channel | Setup |
-|---------|-------|
-| **Telegram** | Easy (just a token) |
-| **WhatsApp** | Medium (scan QR) |
-
-<details>
-<summary><b>Telegram</b> (Recommended)</summary>
-
-**1. Create a bot**
-- Open Telegram, search `@BotFather`
-- Send `/newbot`, follow prompts
-- Copy the token
-
-**2. Configure**
-
-```json
-{
-  "channels": {
-    "telegram": {
-      "enabled": true,
-      "token": "YOUR_BOT_TOKEN",
-      "allowFrom": ["YOUR_USER_ID"]
-    }
-  }
-}
-```
-
-> Get your user ID from `@userinfobot` on Telegram.
-
-**3. Run**
-
-```bash
-nanobot gateway
-```
-
-</details>
-
-<details>
-<summary><b>WhatsApp</b></summary>
-
-Requires **Node.js ≥18**.
-
-**1. Link device**
-
-```bash
-nanobot channels login
-# Scan QR with WhatsApp → Settings → Linked Devices
-```
-
-**2. Configure**
-
-```json
-{
-  "channels": {
-    "whatsapp": {
-      "enabled": true,
-      "allowFrom": ["+1234567890"]
-    }
-  }
-}
-```
-
-**3. Run** (two terminals)
-
-```bash
-# Terminal 1
-nanobot channels login
-
-# Terminal 2
-nanobot gateway
-```
-
-</details>
-
-## ⚙️ Configuration
-
-Config file: `~/.nanobot/config.json`
-
-### Providers
-
-> [!NOTE]
-> Groq provides free voice transcription via Whisper. If configured, Telegram voice messages will be automatically transcribed.
-
-| Provider | Purpose | Get API Key |
-|----------|---------|-------------|
-| `openrouter` | LLM (recommended, access to all models) | [openrouter.ai](https://openrouter.ai) |
-| `anthropic` | LLM (Claude direct) | [console.anthropic.com](https://console.anthropic.com) |
-| `openai` | LLM (GPT direct) | [platform.openai.com](https://platform.openai.com) |
-| `groq` | LLM + **Voice transcription** (Whisper) | [console.groq.com](https://console.groq.com) |
-| `gemini` | LLM (Gemini direct) | [aistudio.google.com](https://aistudio.google.com) |
-
-
-<details>
-<summary><b>Full config example</b></summary>
-
-```json
-{
-  "agents": {
-    "defaults": {
-      "model": "anthropic/claude-opus-4-5"
-    }
-  },
-  "providers": {
-    "openrouter": {
-      "apiKey": "sk-or-v1-xxx"
-    },
-    "groq": {
-      "apiKey": "gsk_xxx"
-    }
-  },
-  "channels": {
-    "telegram": {
-      "enabled": true,
-      "token": "123456:ABC...",
-      "allowFrom": ["123456789"]
-    },
-    "whatsapp": {
-      "enabled": false
-    }
-  },
-  "tools": {
-    "web": {
-      "search": {
-        "apiKey": "BSA..."
-      }
-    }
-  }
-}
-```
-
-</details>
-
-## CLI Reference
-
-| Command | Description |
-|---------|-------------|
-| `nanobot onboard` | Initialize config & workspace |
-| `nanobot agent -m "..."` | Chat with the agent |
-| `nanobot agent` | Interactive chat mode |
-| `nanobot gateway` | Start the gateway |
-| `nanobot status` | Show status |
-| `nanobot channels login` | Link WhatsApp (scan QR) |
-| `nanobot channels status` | Show channel status |
-
-<details>
-<summary><b>Scheduled Tasks (Cron)</b></summary>
-
-```bash
-# Add a job
-nanobot cron add --name "daily" --message "Good morning!" --cron "0 9 * * *"
-nanobot cron add --name "hourly" --message "Check status" --every 3600
-
-# List jobs
-nanobot cron list
-
-# Remove a job
-nanobot cron remove <job_id>
-```
-
-</details>
-
-## 🐳 Docker
-
-> [!TIP]
-> The `-v ~/.nanobot:/root/.nanobot` flag mounts your local config directory into the container, so your config and workspace persist across container restarts.
-
-Build and run nanobot in a container:
-
-```bash
-# Build the image
-docker build -t nanobot .
-
-# Initialize config (first time only)
-docker run -v ~/.nanobot:/root/.nanobot --rm nanobot onboard
-
-# Edit config on host to add API keys
-vim ~/.nanobot/config.json
-
-# Run gateway (connects to Telegram/WhatsApp)
-docker run -v ~/.nanobot:/root/.nanobot -p 18790:18790 nanobot gateway
-
-# Or run a single command
-docker run -v ~/.nanobot:/root/.nanobot --rm nanobot agent -m "Hello!"
-docker run -v ~/.nanobot:/root/.nanobot --rm nanobot status
-```
-
-## 📁 Project Structure
-
-```
-nanobot/
-├── agent/          # 🧠 Core agent logic
-│   ├── loop.py     #    Agent loop (LLM ↔ tool execution)
-│   ├── context.py  #    Prompt builder
-│   ├── memory.py   #    Persistent memory
-│   ├── skills.py   #    Skills loader
-│   ├── subagent.py #    Background task execution
-│   └── tools/      #    Built-in tools (incl. spawn)
-├── skills/         # 🎯 Bundled skills (github, weather, tmux...)
-├── channels/       # 📱 WhatsApp integration
-├── bus/            # 🚌 Message routing
-├── cron/           # ⏰ Scheduled tasks
-├── heartbeat/      # 💓 Proactive wake-up
-├── providers/      # 🤖 LLM providers (OpenRouter, etc.)
-├── session/        # 💬 Conversation sessions
-├── config/         # ⚙️ Configuration
-└── cli/            # 🖥️ Commands
-```
-
-## 🤝 Contribute & Roadmap
-
-PRs welcome! The codebase is intentionally small and readable. 🤗
-
-**Roadmap** — Pick an item and [open a PR](https://github.com/HKUDS/nanobot/pulls)!
-
-- [x] **Voice Transcription** — Support for Groq Whisper (Issue #13)
-- [ ] **Multi-modal** — See and hear (images, voice, video)
-- [ ] **Long-term memory** — Never forget important context
-- [ ] **Better reasoning** — Multi-step planning and reflection
-- [ ] **More integrations** — Discord, Slack, email, calendar
-- [ ] **Self-improvement** — Learn from feedback and mistakes
-
-### Contributors
-
-<a href="https://github.com/HKUDS/nanobot/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=HKUDS/nanobot" />
-</a>
-
-
-## ⭐ Star History
+## ⭐ Star历史
 
 <div align="center">
   <a href="https://star-history.com/#HKUDS/nanobot&Date">
     <picture>
       <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=HKUDS/nanobot&type=Date&theme=dark" />
       <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=HKUDS/nanobot&type=Date" />
-      <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=HKUDS/nanobot&type=Date" style="border-radius: 15px; box-shadow: 0 0 30px rgba(0, 217, 255, 0.3);" />
+      <img alt="Star历史图" src="https://api.star-history.com/svg?repos=HKUDS/nanobot&type=Date" style="border-radius: 15px; box-shadow: 0 0 30px rgba(0, 217, 255, 0.3);" />
     </picture>
   </a>
 </div>
 
 <p align="center">
-  <em> Thanks for visiting ✨ nanobot!</em><br><br>
-  <img src="https://visitor-badge.laobi.icu/badge?page_id=HKUDS.nanobot&style=for-the-badge&color=00d4ff" alt="Views">
+  <em>感谢访问 ✨ nanobot!</em><br><br>
+  <img src="https://visitor-badge.laobi.icu/badge?page_id=HKUDS.nanobot&style=for-the-badge&color=00d4ff" alt="访问量">
 </p>
 
-
 <p align="center">
-  <sub>nanobot is for educational, research, and technical exchange purposes only</sub>
+  <sub>nanobot仅用于教育、研究和技术交流目的</sub>
 </p>

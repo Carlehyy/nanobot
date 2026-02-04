@@ -1,0 +1,78 @@
+flowchart TD
+    START([开始处理消息])
+    
+    %% 初始化
+    GET_SESSION[获取或创建会话]
+    UPDATE_CONTEXT[更新工具上下文<br/>channel + chat_id]
+    BUILD_MESSAGES[构建消息列表<br/>系统提示词 + 历史 + 当前消息]
+    
+    %% Agent循环
+    INIT_LOOP[初始化循环<br/>iteration = 0]
+    CHECK_ITER{iteration < max_iterations?<br/>默认最多20次}
+    INC_ITER[iteration += 1]
+    
+    %% LLM调用
+    CALL_LLM[调用LLM<br/>messages + tools + model]
+    GET_RESPONSE[获取LLM响应]
+    
+    %% 工具调用判断
+    HAS_TOOLS{有工具调用?}
+    
+    %% 工具执行
+    ADD_ASSISTANT[将助手消息添加到历史<br/>包含tool_calls]
+    EXEC_TOOLS[执行所有工具调用]
+    ADD_RESULTS[将工具结果添加到历史<br/>role: tool]
+    
+    %% 最终响应
+    FINAL_RESPONSE[得到最终响应<br/>final_content]
+    CHECK_RESPONSE{final_content<br/>是否为空?}
+    DEFAULT_MSG[使用默认消息<br/>已完成处理]
+    
+    %% 保存和返回
+    SAVE_SESSION[保存对话历史到会话]
+    CREATE_OUTBOUND[创建出站消息<br/>OutboundMessage]
+    END([返回响应])
+    
+    %% 流程连接
+    START --> GET_SESSION
+    GET_SESSION --> UPDATE_CONTEXT
+    UPDATE_CONTEXT --> BUILD_MESSAGES
+    BUILD_MESSAGES --> INIT_LOOP
+    
+    INIT_LOOP --> CHECK_ITER
+    CHECK_ITER -->|是| INC_ITER
+    CHECK_ITER -->|否| CHECK_RESPONSE
+    
+    INC_ITER --> CALL_LLM
+    CALL_LLM --> GET_RESPONSE
+    GET_RESPONSE --> HAS_TOOLS
+    
+    HAS_TOOLS -->|是| ADD_ASSISTANT
+    ADD_ASSISTANT --> EXEC_TOOLS
+    EXEC_TOOLS --> ADD_RESULTS
+    ADD_RESULTS --> CHECK_ITER
+    
+    HAS_TOOLS -->|否| FINAL_RESPONSE
+    FINAL_RESPONSE --> CHECK_RESPONSE
+    
+    CHECK_RESPONSE -->|是| DEFAULT_MSG
+    CHECK_RESPONSE -->|否| SAVE_SESSION
+    DEFAULT_MSG --> SAVE_SESSION
+    
+    SAVE_SESSION --> CREATE_OUTBOUND
+    CREATE_OUTBOUND --> END
+    
+    %% 样式定义
+    classDef initStyle fill:#E3F2FD,stroke:#1976D2,stroke-width:2px
+    classDef loopStyle fill:#FFF9C4,stroke:#F57F17,stroke-width:2px
+    classDef llmStyle fill:#F3E5F5,stroke:#7B1FA2,stroke-width:2px
+    classDef toolStyle fill:#E8F5E9,stroke:#388E3C,stroke-width:2px
+    classDef finalStyle fill:#FFE0B2,stroke:#E64A19,stroke-width:2px
+    classDef decisionStyle fill:#FFCCBC,stroke:#BF360C,stroke-width:2px
+    
+    class GET_SESSION,UPDATE_CONTEXT,BUILD_MESSAGES initStyle
+    class INIT_LOOP,INC_ITER loopStyle
+    class CALL_LLM,GET_RESPONSE llmStyle
+    class ADD_ASSISTANT,EXEC_TOOLS,ADD_RESULTS toolStyle
+    class FINAL_RESPONSE,SAVE_SESSION,CREATE_OUTBOUND finalStyle
+    class CHECK_ITER,HAS_TOOLS,CHECK_RESPONSE decisionStyle
