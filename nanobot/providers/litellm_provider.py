@@ -1,4 +1,4 @@
-"""LiteLLM provider implementation for multi-provider support."""
+"""LiteLLM提供商实现，支持多个LLM提供商。"""
 
 import os
 from typing import Any

@@ -1,4 +1,4 @@
-"""Heartbeat service - periodic agent wake-up to check for tasks."""
+"""心跳服务 - 定期唤醒Agent检查任务。"""
 
 import asyncio
 from pathlib import Path

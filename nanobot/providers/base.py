@@ -1,4 +1,4 @@
-"""Base LLM provider interface."""
+"""LLM提供商基础接口。"""
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field

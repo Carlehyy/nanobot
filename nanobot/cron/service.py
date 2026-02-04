@@ -1,4 +1,4 @@
-"""Cron service for scheduling agent tasks."""
+"""定时任务服务，用于调度Agent任务。"""
 
 import asyncio
 import json

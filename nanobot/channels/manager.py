@@ -1,4 +1,4 @@
-"""Channel manager for coordinating chat channels."""
+"""渠道管理器，用于协调聊天渠道。"""
 
 import asyncio
 from typing import Any

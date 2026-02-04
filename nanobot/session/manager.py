@@ -1,4 +1,4 @@
-"""Session management for conversation history."""
+"""会话管理，用于管理对话历史。"""
 
 import json
 from pathlib import Path

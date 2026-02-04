@@ -1,4 +1,4 @@
-"""Configuration loading utilities."""
+"""配置加载工具。"""
 
 import json
 from pathlib import Path

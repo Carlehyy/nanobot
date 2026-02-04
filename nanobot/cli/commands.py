@@ -1,4 +1,4 @@
-"""CLI commands for nanobot."""
+"""nanobot的CLI命令。"""
 
 import asyncio
 from pathlib import Path

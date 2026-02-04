@@ -1,6 +1,1 @@
-"""Chat channels module with plugin architecture."""
-
-from nanobot.channels.base import BaseChannel
-from nanobot.channels.manager import ChannelManager
-
-__all__ = ["BaseChannel", "ChannelManager"]
+"""聊天渠道模块，采用插件架构。"""

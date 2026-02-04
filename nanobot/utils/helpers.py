@@ -1,4 +1,4 @@
-"""Utility functions for nanobot."""
+"""nanobot的实用工具函数。"""
 
 from pathlib import Path
 from datetime import datetime

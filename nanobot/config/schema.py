@@ -1,4 +1,4 @@
-"""Configuration schema using Pydantic."""
+"""使用Pydantic的配置模式定义。"""
 
 from pathlib import Path
 from pydantic import BaseModel, Field

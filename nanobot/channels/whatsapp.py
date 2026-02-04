@@ -1,4 +1,4 @@
-"""WhatsApp channel implementation using Node.js bridge."""
+"""WhatsApp渠道实现，使用Node.js桥接。"""
 
 import asyncio
 import json

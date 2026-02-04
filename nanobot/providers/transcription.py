@@ -1,4 +1,4 @@
-"""Voice transcription provider using Groq."""
+"""使用Groq的语音转录提供商。"""
 
 import os
 from pathlib import Path

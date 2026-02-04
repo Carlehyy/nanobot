@@ -1,4 +1,4 @@
-"""Telegram channel implementation using python-telegram-bot."""
+"""Telegram渠道实现，使用python-telegram-bot库。"""
 
 import asyncio
 import re

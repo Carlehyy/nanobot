@@ -1,4 +1,4 @@
-"""Base channel interface for chat platforms."""
+"""聊天平台的基础渠道接口。"""
 
 from abc import ABC, abstractmethod
 from typing import Any

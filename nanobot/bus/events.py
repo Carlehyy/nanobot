@@ -1,4 +1,4 @@
-"""Event types for the message bus."""
+"""消息总线的事件类型定义。"""
 
 from dataclasses import dataclass, field
 from datetime import datetime

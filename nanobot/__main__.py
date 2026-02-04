@@ -1,5 +1,5 @@
 """
-Entry point for running nanobot as a module: python -m nanobot
+模块入口点：以模块方式运行nanobot（python -m nanobot）
 """
 
 from nanobot.cli.commands import app
