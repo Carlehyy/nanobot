@@ -1,4 +1,4 @@
-# nanobot: 超轻量级个人AI助手 (中文版)
+# nanobot: 超轻量级个人AI助手 (中文学习版)
 
 <div align="center">
   <img src="nanobot_logo.png" alt="nanobot" width="500">
@@ -20,7 +20,7 @@
 
 ⚡️ 仅用 **~5,000行** Python代码实现了完整的Agent核心功能，比Clawdbot的43万多行代码**小99%**。
 
-这个版本是在原项目基础上添加了**详细的中文注释**和**架构图**，旨在帮助开发者更好地学习和理解AI Agent的实现原理。
+这个版本是在原项目基础上添加了**详细的中文注释**和**由浅入深的架构图**，旨在帮助开发者更好地学习和理解AI Agent的实现原理。
 
 ## 核心特性
 
@@ -31,55 +31,74 @@
 - 🧩 **模块化设计**: 清晰的架构分层，各模块职责明确。
 - 🔌 **可扩展**: 支持自定义工具、技能和渠道。
 
-## 🏗️ 整体架构
+## 🏗️ 架构：由浅入深
 
 nanobot采用分层、模块化的设计，核心组件之间通过消息总线解耦，具有高度的灵活性和可扩展性。
 
+### 1. 宏观三层架构
+
+从最高层面看，nanobot可以分为三个核心层次：
+
 <p align="center">
-  <img src="docs/architecture.png" alt="nanobot 整体架构图" width="800">
+  <img src="docs/architecture_simple.png" alt="nanobot 宏观三层架构" width="700">
 </p>
 
-| 层次 | 核心模块 | 主要职责 |
-| :--- | :--- | :--- |
-| **用户交互层** | `channels` | 负责与用户通过不同渠道（CLI、Telegram、WhatsApp）进行交互。 |
-| **消息总线层** | `bus` | 异步消息队列，解耦渠道和Agent核心，实现发布-订阅模式。 |
-| **Agent核心层** | `agent` | 实现Agent的核心逻辑，包括主循环、上下文构建、工具调用和子Agent管理。 |
-| **工具系统** | `agent/tools` | 提供Agent与外部世界交互的能力，如文件操作、Web搜索等。 |
-| **支持服务层** | `session`, `memory`, `skills`, `providers` | 提供会话管理、记忆存储、技能加载和LLM调用等支持功能。 |
-| **基础设施层** | `config`, `cron`, `heartbeat` | 提供配置管理、定时任务和心跳唤醒等底层服务。 |
+| 层次 | 主要职责 |
+| :--- | :--- |
+| **用户交互层** | 负责与用户通过不同渠道（CLI、Telegram、WhatsApp）进行交互。 |
+| **消息总线层** | 异步消息队列，解耦渠道和Agent核心，实现发布-订阅模式。 |
+| **Agent核心层** | 实现Agent的核心逻辑，包括主循环、工具调用和LLM交互。 |
 
-## 核心流程
+### 2. 详细组件架构
 
-### 1. 消息处理流程
-
-下图展示了从用户发送消息到Agent返回响应的完整流程：
+展开Agent核心层，我们可以看到更详细的组件关系：
 
 <p align="center">
-  <img src="docs/message_flow.png" alt="nanobot 消息处理流程图" width="800">
+  <img src="docs/architecture_detailed.png" alt="nanobot 详细组件架构" width="800">
 </p>
 
-### 2. Agent主循环
+## 核心流程：由浅入深
 
-Agent的核心是一个循环，它不断调用LLM并根据LLM的响应执行工具，直到任务完成。
+理解nanobot的最佳方式是跟随它的核心流程，从最简单的问答到复杂的并行处理。
+
+### 步骤1：最简单的问答流程
+
+当用户提出一个不需要工具的简单问题时，流程非常直接：
 
 <p align="center">
-  <img src="docs/agent_loop.png" alt="nanobot Agent主循环流程图" width="800">
+  <img src="docs/flow_step1_basic.png" alt="nanobot 流程1：简单问答" width="700">
 </p>
 
-### 3. 子Agent交互
+### 步骤2：引入工具调用
 
-对于复杂或耗时的任务，主Agent可以生成一个子Agent在后台处理，并通过系统消息获取结果。
+当需要与外部世界交互时（如读文件、上网），Agent会使用工具：
 
 <p align="center">
-  <img src="docs/subagent_flow.png" alt="nanobot 子Agent交互流程图" width="800">
+  <img src="docs/flow_step2_tools.png" alt="nanobot 流程2：工具调用" width="700">
 </p>
 
-### 4. 工具执行流程
+### 步骤3：Agent循环机制
 
-当LLM决定调用工具时，`ToolRegistry`会负责查找、验证和执行工具，并将结果返回给LLM。
+为了完成可能需要多次工具调用的复杂任务，Agent会进入一个循环：
 
 <p align="center">
-  <img src="docs/tool_execution.png" alt="nanobot 工具执行流程图" width="800">
+  <img src="docs/flow_step3_loop.png" alt="nanobot 流程3：Agent循环" width="600">
+</p>
+
+### 步骤4：支持多渠道
+
+通过消息总线，单个Agent可以同时为来自不同渠道的多个用户服务：
+
+<p align="center">
+  <img src="docs/flow_step4_channels.png" alt="nanobot 流程4：多渠道" width="700">
+</p>
+
+### 步骤5：子Agent并行处理
+
+对于耗时或复杂的任务，主Agent可以生成一个子Agent在后台处理，而不会阻塞自己：
+
+<p align="center">
+  <img src="docs/flow_step5_subagent.png" alt="nanobot 流程5：子Agent" width="700">
 </p>
 
 ## 📦 安装

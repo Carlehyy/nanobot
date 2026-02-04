@@ -1,0 +1,31 @@
+flowchart TD
+    START([用户发送消息])
+    
+    CALL_LLM[调用LLM]
+    CHECK{LLM返回<br/>工具调用?}
+    
+    EXEC_TOOL[执行工具]
+    ADD_RESULT[将结果添加到历史]
+    
+    FINAL[得到最终答案]
+    SEND[返回给用户]
+    
+    START --> CALL_LLM
+    CALL_LLM --> CHECK
+    
+    CHECK -->|是| EXEC_TOOL
+    EXEC_TOOL --> ADD_RESULT
+    ADD_RESULT --> CALL_LLM
+    
+    CHECK -->|否| FINAL
+    FINAL --> SEND
+    
+    classDef loopStyle fill:#FFF9C4,stroke:#F57F17,stroke-width:2px
+    classDef toolStyle fill:#E8F5E9,stroke:#388E3C,stroke-width:2px
+    classDef finalStyle fill:#E3F2FD,stroke:#1976D2,stroke-width:2px
+    
+    class CALL_LLM,CHECK loopStyle
+    class EXEC_TOOL,ADD_RESULT toolStyle
+    class FINAL,SEND finalStyle
+    
+    style START fill:#FFE0B2,stroke:#E65100,stroke-width:3px

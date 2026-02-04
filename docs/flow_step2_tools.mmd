@@ -1,0 +1,18 @@
+sequenceDiagram
+    participant 用户
+    participant Agent
+    participant LLM
+    participant 工具
+    
+    用户->>Agent: 发送请求<br/>"读取config.json"
+    Agent->>LLM: 转发请求
+    LLM-->>Agent: 返回工具调用<br/>read_file(path="config.json")
+    
+    Agent->>工具: 执行read_file
+    工具-->>Agent: 返回文件内容
+    
+    Agent->>LLM: 发送工具结果
+    LLM-->>Agent: 生成最终答案<br/>"配置文件内容是..."
+    Agent-->>用户: 返回答案
+    
+    Note over 用户,工具: 步骤2：Agent通过工具与外部世界交互

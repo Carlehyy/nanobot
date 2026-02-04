@@ -1,0 +1,11 @@
+sequenceDiagram
+    participant 用户
+    participant Agent
+    participant LLM
+    
+    用户->>Agent: 发送问题<br/>"2+2等于几？"
+    Agent->>LLM: 转发问题
+    LLM-->>Agent: 返回答案<br/>"2+2等于4"
+    Agent-->>用户: 返回答案
+    
+    Note over 用户,LLM: 步骤1：最简单的问答流程

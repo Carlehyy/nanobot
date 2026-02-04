@@ -1,0 +1,30 @@
+graph TB
+    subgraph "第1层：用户交互"
+        USER[👤 用户]
+        CHANNELS[📱 多渠道<br/>Telegram / WhatsApp / CLI]
+    end
+    
+    subgraph "第2层：消息总线"
+        BUS[🚌 消息总线<br/>异步队列 / 发布订阅]
+    end
+    
+    subgraph "第3层：Agent核心"
+        AGENT[🤖 Agent<br/>循环处理 / 工具调用]
+        LLM[🧠 LLM<br/>Claude / GPT / Gemini]
+    end
+    
+    USER -->|发送消息| CHANNELS
+    CHANNELS -->|入站| BUS
+    BUS -->|消费| AGENT
+    AGENT <-->|调用| LLM
+    AGENT -->|出站| BUS
+    BUS -->|分发| CHANNELS
+    CHANNELS -->|返回响应| USER
+    
+    classDef userStyle fill:#E3F2FD,stroke:#1976D2,stroke-width:3px
+    classDef busStyle fill:#FFF9C4,stroke:#F57F17,stroke-width:3px
+    classDef agentStyle fill:#E8F5E9,stroke:#388E3C,stroke-width:3px
+    
+    class USER,CHANNELS userStyle
+    class BUS busStyle
+    class AGENT,LLM agentStyle

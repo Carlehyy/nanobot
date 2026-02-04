@@ -1,0 +1,32 @@
+graph LR
+    subgraph "多个用户"
+        U1[👤 用户A<br/>Telegram]
+        U2[👤 用户B<br/>WhatsApp]
+        U3[👤 用户C<br/>CLI]
+    end
+    
+    subgraph "消息总线"
+        QUEUE[📥 消息队列<br/>先进先出]
+    end
+    
+    subgraph "单个Agent"
+        AGENT[🤖 Agent<br/>依次处理]
+    end
+    
+    U1 -->|消息1| QUEUE
+    U2 -->|消息2| QUEUE
+    U3 -->|消息3| QUEUE
+    
+    QUEUE -->|按顺序| AGENT
+    
+    AGENT -.->|响应1| U1
+    AGENT -.->|响应2| U2
+    AGENT -.->|响应3| U3
+    
+    classDef userStyle fill:#E3F2FD,stroke:#1976D2,stroke-width:2px
+    classDef queueStyle fill:#FFF9C4,stroke:#F57F17,stroke-width:2px
+    classDef agentStyle fill:#E8F5E9,stroke:#388E3C,stroke-width:2px
+    
+    class U1,U2,U3 userStyle
+    class QUEUE queueStyle
+    class AGENT agentStyle

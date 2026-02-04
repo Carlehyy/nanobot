@@ -1,0 +1,23 @@
+sequenceDiagram
+    participant 用户
+    participant 主Agent
+    participant 子Agent
+    
+    用户->>主Agent: 复杂任务<br/>"分析最近100个日志文件"
+    
+    主Agent->>子Agent: 生成子Agent<br/>后台处理
+    主Agent-->>用户: 立即响应<br/>"任务已启动，稍后通知"
+    
+    Note over 主Agent,用户: 主Agent继续处理其他请求
+    
+    rect rgb(255, 250, 205)
+        Note over 子Agent: 子Agent在后台工作<br/>（不阻塞主Agent）
+        子Agent->>子Agent: 读取文件
+        子Agent->>子Agent: 分析数据
+        子Agent->>子Agent: 生成报告
+    end
+    
+    子Agent->>主Agent: 系统消息<br/>"任务完成"
+    主Agent->>用户: 通知结果<br/>"分析完成！发现3个警告"
+    
+    Note over 用户,子Agent: 步骤5：子Agent实现并行处理

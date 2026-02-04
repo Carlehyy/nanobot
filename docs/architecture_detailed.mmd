@@ -1,0 +1,74 @@
+graph TB
+    subgraph "用户交互层"
+        USER[👤 用户]
+        CLI[💻 CLI命令行]
+        TG[📱 Telegram]
+        WA[💬 WhatsApp]
+    end
+    
+    subgraph "消息总线层"
+        INBOUND[📥 入站队列]
+        OUTBOUND[📤 出站队列]
+    end
+    
+    subgraph "Agent核心层"
+        LOOP[🔄 Agent循环]
+        CONTEXT[📝 上下文构建]
+        TOOLS[🛠️ 工具注册表]
+        SUBAGENT[⚡ 子Agent管理]
+    end
+    
+    subgraph "LLM层"
+        LLM[🧠 LLM提供商<br/>Claude / GPT / Gemini]
+    end
+    
+    subgraph "工具层"
+        FILE[📁 文件操作]
+        SHELL[⚙️ Shell执行]
+        WEB[🌐 Web搜索]
+        MSG[💬 消息发送]
+    end
+    
+    %% 用户输入流
+    USER --> CLI
+    USER --> TG
+    USER --> WA
+    CLI --> INBOUND
+    TG --> INBOUND
+    WA --> INBOUND
+    
+    %% Agent处理流
+    INBOUND --> LOOP
+    LOOP --> CONTEXT
+    CONTEXT --> LLM
+    LLM --> LOOP
+    LOOP --> TOOLS
+    LOOP --> SUBAGENT
+    
+    %% 工具执行
+    TOOLS --> FILE
+    TOOLS --> SHELL
+    TOOLS --> WEB
+    TOOLS --> MSG
+    
+    %% 响应输出流
+    LOOP --> OUTBOUND
+    OUTBOUND --> CLI
+    OUTBOUND --> TG
+    OUTBOUND --> WA
+    CLI --> USER
+    TG --> USER
+    WA --> USER
+    
+    %% 样式
+    classDef userLayer fill:#E3F2FD,stroke:#1976D2,stroke-width:2px
+    classDef busLayer fill:#FFF9C4,stroke:#F57F17,stroke-width:2px
+    classDef agentLayer fill:#E8F5E9,stroke:#388E3C,stroke-width:2px
+    classDef llmLayer fill:#F3E5F5,stroke:#7B1FA2,stroke-width:2px
+    classDef toolLayer fill:#FFE0B2,stroke:#E65100,stroke-width:2px
+    
+    class USER,CLI,TG,WA userLayer
+    class INBOUND,OUTBOUND busLayer
+    class LOOP,CONTEXT,TOOLS,SUBAGENT agentLayer
+    class LLM llmLayer
+    class FILE,SHELL,WEB,MSG toolLayer
