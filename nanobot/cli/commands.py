@@ -158,9 +158,7 @@ def gateway(
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output"),
 ):
     """Start the nanobot gateway (supports both single-bot and multi-bot modes)."""
-    from nanobot.config.loader import load_config, get_data_dir
-    from nanobot.bus.queue import MessageBus
-    from nanobot.channels.manager import ChannelManager
+    from nanobot.config.loader import load_config
     
     if verbose:
         import logging
@@ -176,49 +174,54 @@ def gateway(
 
 
 def _run_multi_bot_gateway(config, port: int):
-    """Run gateway in multi-bot mode."""
-    from nanobot.bus.queue import MessageBus
-    from nanobot.channels.manager import ChannelManager
-    from nanobot.bot_manager import MultiBotManager
+    """
+    Run gateway in multi-bot mode with process isolation.
     
-    console.print(f"{__logo__} Starting nanobot gateway in [bold green]MULTI-BOT[/bold green] mode...")
+    Each bot runs as an independent subprocess with its own Feishu connection.
+    The supervisor monitors and auto-restarts crashed bots.
+    """
+    from nanobot.bot_manager import BotProcessSupervisor
+    
+    console.print(f"{__logo__} Starting nanobot gateway in [bold green]MULTI-BOT (Process Isolation)[/bold green] mode...")
     console.print(f"  Bots configured: {len(config.bots)}")
     
     for i, bot in enumerate(config.bots):
-        console.print(f"  [{i+1}] {bot.name} (model: {bot.model})")
+        has_key = "[green]✓[/green]" if bot.api_key else "[red]✗[/red]"
+        has_feishu = "[green]✓[/green]" if bot.feishu.app_id else "[red]✗[/red]"
+        console.print(f"  [{i+1}] {bot.name} (model: {bot.model}) API: {has_key} Feishu: {has_feishu}")
     
-    # Create components
-    bus = MessageBus()
+    # Create supervisor
+    supervisor = BotProcessSupervisor(config)
     
-    # Create multi-bot manager
-    bot_manager = MultiBotManager(config, bus)
+    console.print(f"\n[green]✓[/green] Starting {len(config.bots)} independent bot processes...")
+    console.print(f"[green]✓[/green] Auto-restart: {'enabled' if config.multi_bot.auto_restart else 'disabled'}")
+    console.print(f"[dim]Each bot runs as an independent process with its own Feishu connection.[/dim]")
+    console.print(f"[dim]Press Ctrl+C to stop all bots.[/dim]\n")
     
-    status = bot_manager.get_status()
-    console.print(f"[green]✓[/green] {status['bot_count']} bots initialized")
+    import signal
     
-    # Create channel manager
-    channels = ChannelManager(config, bus)
+    def handle_signal(signum, frame):
+        console.print("\n[yellow]Received shutdown signal, stopping all bots...[/yellow]")
+        supervisor.stop_all()
+        raise SystemExit(0)
     
-    if channels.enabled_channels:
-        console.print(f"[green]✓[/green] Channels enabled: {', '.join(channels.enabled_channels)}")
-    else:
-        console.print("[yellow]Warning: No channels enabled. Enable feishu in config.json.[/yellow]")
+    signal.signal(signal.SIGINT, handle_signal)
+    signal.signal(signal.SIGTERM, handle_signal)
     
-    console.print(f"[green]✓[/green] Multi-bot gateway ready on port {port}")
-    console.print("[dim]Bots will respond to group messages collaboratively.[/dim]")
+    # Start all bot processes
+    supervisor.start_all()
     
-    async def run():
-        try:
-            await asyncio.gather(
-                bot_manager.run(),
-                channels.start_all(),
-            )
-        except KeyboardInterrupt:
-            console.print("\nShutting down...")
-            bot_manager.stop()
-            await channels.stop_all()
+    status = supervisor.get_status()
+    running_count = sum(1 for b in status["bots"] if b["running"])
+    console.print(f"[green]✓[/green] {running_count}/{len(config.bots)} bot processes running")
     
-    asyncio.run(run())
+    # Monitor and restart loop (blocks until stopped)
+    try:
+        supervisor.monitor_and_restart()
+    except (KeyboardInterrupt, SystemExit):
+        pass
+    finally:
+        supervisor.stop_all()
 
 
 def _run_single_bot_gateway(config, port: int):
@@ -333,6 +336,21 @@ def _run_single_bot_gateway(config, port: int):
     asyncio.run(run())
 
 
+# ============================================================================
+# Bot Worker Command (used by multi-bot process isolation mode)
+# ============================================================================
+
+
+@app.command("bot-worker", hidden=True)
+def bot_worker():
+    """
+    Run a single bot worker process (internal command).
+    
+    This command is called by the BotProcessSupervisor for each bot.
+    Configuration is passed via environment variables.
+    """
+    from nanobot.bot_worker import run_worker
+    run_worker()
 
 
 # ============================================================================
@@ -449,11 +467,11 @@ def channels_status():
         tg_config
     )
     
-    # Feishu
+    # Feishu (global)
     fs = config.channels.feishu
     fs_config = f"appId: {fs.app_id[:10]}..." if fs.app_id else "[dim]not configured[/dim]"
     table.add_row(
-        "Feishu",
+        "Feishu (global)",
         "✓" if fs.enabled else "✗",
         fs_config
     )
@@ -462,15 +480,27 @@ def channels_status():
     
     # Show multi-bot status if configured
     if config.is_multi_bot_mode:
-        console.print(f"\n[bold green]Multi-Bot Mode[/bold green]: {len(config.bots)} bots configured")
+        console.print(f"\n[bold green]Multi-Bot Mode (Process Isolation)[/bold green]: {len(config.bots)} bots configured")
         bot_table = Table(title="Bot Instances")
+        bot_table.add_column("#", style="dim")
         bot_table.add_column("Name", style="cyan")
         bot_table.add_column("Model", style="green")
-        bot_table.add_column("Persona", style="yellow")
+        bot_table.add_column("API Key", style="yellow")
+        bot_table.add_column("Feishu App", style="magenta")
+        bot_table.add_column("Persona", style="white")
         
-        for bot in config.bots:
+        for i, bot in enumerate(config.bots):
             persona_display = bot.persona[:40] + "..." if len(bot.persona) > 40 else bot.persona
-            bot_table.add_row(bot.name, bot.model, persona_display or "[dim]default[/dim]")
+            api_key_display = bot.api_key[:8] + "..." if bot.api_key else "[red]✗[/red]"
+            feishu_display = bot.feishu.app_id[:10] + "..." if bot.feishu.app_id else "[red]✗[/red]"
+            bot_table.add_row(
+                str(i + 1),
+                bot.name,
+                bot.model,
+                api_key_display,
+                feishu_display,
+                persona_display or "[dim]default[/dim]",
+            )
         
         console.print(bot_table)
 
@@ -730,10 +760,15 @@ def status():
     if config_path.exists():
         # Check mode
         if config.is_multi_bot_mode:
-            console.print(f"\nMode: [bold green]Multi-Bot[/bold green] ({len(config.bots)} bots)")
+            console.print(f"\nMode: [bold green]Multi-Bot (Process Isolation)[/bold green] ({len(config.bots)} bots)")
             for i, bot in enumerate(config.bots):
                 has_key = "✓" if bot.api_key else "✗"
-                console.print(f"  [{i+1}] {bot.name} (model: {bot.model}) API: {'[green]' + has_key + '[/green]' if bot.api_key else '[red]' + has_key + '[/red]'}")
+                has_feishu = "✓" if bot.feishu.app_id else "✗"
+                console.print(
+                    f"  [{i+1}] {bot.name} (model: {bot.model}) "
+                    f"API: {'[green]' + has_key + '[/green]' if bot.api_key else '[red]' + has_key + '[/red]'} "
+                    f"Feishu: {'[green]' + has_feishu + '[/green]' if bot.feishu.app_id else '[red]' + has_feishu + '[/red]'}"
+                )
         else:
             console.print(f"\nMode: [bold cyan]Single-Bot[/bold cyan]")
             console.print(f"Model: {config.agents.defaults.model}")
@@ -752,9 +787,9 @@ def status():
             vllm_status = f"[green]✓ {config.providers.vllm.api_base}[/green]" if has_vllm else "[dim]not set[/dim]"
             console.print(f"vLLM/Local: {vllm_status}")
         
-        # Feishu status
+        # Feishu status (global)
         fs = config.channels.feishu
-        console.print(f"\nFeishu: {'[green]✓ enabled[/green]' if fs.enabled else '[dim]disabled[/dim]'}")
+        console.print(f"\nFeishu (global): {'[green]✓ enabled[/green]' if fs.enabled else '[dim]disabled[/dim]'}")
         if fs.app_id:
             console.print(f"  App ID: {fs.app_id[:10]}...")
 

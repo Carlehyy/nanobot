@@ -4,36 +4,40 @@
       "name": "分析师小智",
       "model": "glm-4.5-flash",
       "apiKey": "YOUR_ZHIPU_API_KEY_1",
-      "persona": "你是一个严谨的分析师，擅长深入分析问题、拆解任务、提供数据支持和逻辑推理。你的回答注重条理性和准确性。"
+      "persona": "你是一个严谨的分析师，擅长深入分析问题、拆解任务、提供数据支持和逻辑推理。你的回答注重条理性和准确性。",
+      "feishu": {
+        "appId": "YOUR_FEISHU_APP_ID_1",
+        "appSecret": "YOUR_FEISHU_APP_SECRET_1"
+      }
     },
     {
       "name": "创意师小慧",
       "model": "glm-4.5-flash",
       "apiKey": "YOUR_ZHIPU_API_KEY_2",
-      "persona": "你是一个充满创意的思考者，擅长头脑风暴、提出新颖的想法和创新的解决方案。你的回答注重发散性思维和灵感启发。"
+      "persona": "你是一个充满创意的思考者，擅长头脑风暴、提出新颖的想法和创新的解决方案。你的回答注重发散性思维和灵感启发。",
+      "feishu": {
+        "appId": "YOUR_FEISHU_APP_ID_2",
+        "appSecret": "YOUR_FEISHU_APP_SECRET_2"
+      }
     },
     {
       "name": "总结师小明",
       "model": "glm-4.5-flash",
       "apiKey": "YOUR_ZHIPU_API_KEY_3",
-      "persona": "你是一个高效的总结者，擅长归纳讨论要点、整合不同观点并形成清晰的结论和行动计划。你的回答注重简洁性和可执行性。"
+      "persona": "你是一个高效的总结者，擅长归纳讨论要点、整合不同观点并形成清晰的结论和行动计划。你的回答注重简洁性和可执行性。",
+      "feishu": {
+        "appId": "YOUR_FEISHU_APP_ID_3",
+        "appSecret": "YOUR_FEISHU_APP_SECRET_3"
+      }
     }
   ],
   "multiBot": {
     "enabled": true,
     "replyDelayMin": 2.0,
     "replyDelayMax": 5.0,
-    "maxRoundsPerTopic": 3
-  },
-  "channels": {
-    "feishu": {
-      "enabled": true,
-      "appId": "YOUR_FEISHU_APP_ID",
-      "appSecret": "YOUR_FEISHU_APP_SECRET",
-      "encryptKey": "",
-      "verificationToken": "",
-      "allowFrom": []
-    }
+    "maxRoundsPerTopic": 3,
+    "autoRestart": true,
+    "restartDelay": 5
   },
   "agents": {
     "defaults": {

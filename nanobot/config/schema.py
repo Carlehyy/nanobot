@@ -110,17 +110,31 @@ class ToolsConfig(BaseModel):
 
 
 # ============================================================================
-# Multi-Bot Configuration (chat-bot branch)
+# Multi-Bot Configuration (chat-bot branch) - Process Isolation Mode
 # ============================================================================
 
 
+class BotFeishuConfig(BaseModel):
+    """Feishu configuration specific to a single bot instance."""
+    app_id: str = ""  # Each bot has its own Feishu app
+    app_secret: str = ""
+
+
 class BotConfig(BaseModel):
-    """Configuration for a single bot instance in multi-bot mode."""
+    """
+    Configuration for a single bot instance in multi-bot mode.
+    
+    Each bot runs as an independent process with its own:
+    - LLM API key and model
+    - Feishu application (independent identity in group chat)
+    - Persona / role description
+    """
     name: str = "nanobot"  # Display name for the bot
-    model: str = "glm-4"  # LLM model to use
+    model: str = "glm-4.5-flash"  # LLM model to use
     api_key: str = ""  # API key for the LLM provider
     api_base: str | None = None  # Optional custom API base URL
     persona: str = ""  # Optional persona/role description for the bot
+    feishu: BotFeishuConfig = Field(default_factory=BotFeishuConfig)  # Bot's own Feishu app credentials
 
 
 class MultiBotConfig(BaseModel):
@@ -129,6 +143,8 @@ class MultiBotConfig(BaseModel):
     reply_delay_min: float = 2.0  # Minimum delay (seconds) before a bot replies
     reply_delay_max: float = 5.0  # Maximum delay (seconds) before a bot replies
     max_rounds_per_topic: int = 3  # Max rounds each bot can reply per topic to avoid infinite loops
+    auto_restart: bool = True  # Automatically restart crashed bot processes
+    restart_delay: int = 5  # Seconds to wait before restarting a crashed bot
 
 
 class Config(BaseSettings):

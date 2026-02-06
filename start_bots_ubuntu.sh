@@ -1,8 +1,9 @@
 #!/bin/bash
-# ============================================
-#  nanobot Multi-Bot Group Chat Gateway
+# ============================================================
+#  NanoBot Multi-Bot Gateway - Process Isolation Mode
 #  Ubuntu 专用启动脚本
-# ============================================
+#  每个 Bot 作为独立进程运行，拥有独立的飞书连接
+# ============================================================
 
 set -e
 
@@ -13,10 +14,10 @@ CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 echo ""
-echo -e "${CYAN}============================================${NC}"
-echo -e "${CYAN}  nanobot Multi-Bot Group Chat Gateway${NC}"
-echo -e "${CYAN}  Ubuntu Launcher${NC}"
-echo -e "${CYAN}============================================${NC}"
+echo -e "${CYAN}============================================================${NC}"
+echo -e "${CYAN}  NanoBot Multi-Bot Gateway - Process Isolation Mode${NC}"
+echo -e "${CYAN}  每个 Bot 作为独立进程运行${NC}"
+echo -e "${CYAN}============================================================${NC}"
 echo ""
 
 # -------------------------------------------
@@ -78,7 +79,16 @@ else
 fi
 
 # -------------------------------------------
-# 4. 检查配置文件
+# 4. 检查飞书 SDK
+# -------------------------------------------
+if ! $PYTHON_CMD -c "import lark_oapi" &> /dev/null 2>&1; then
+    echo -e "${YELLOW}[INFO] 飞书 SDK 未安装，正在安装...${NC}"
+    $PYTHON_CMD -m pip install lark-oapi --quiet
+fi
+echo -e "${GREEN}[OK]${NC} 飞书 SDK 已安装"
+
+# -------------------------------------------
+# 5. 检查配置文件
 # -------------------------------------------
 CONFIG_PATH="$HOME/.nanobot/config.json"
 
@@ -86,15 +96,15 @@ if [ ! -f "$CONFIG_PATH" ]; then
     echo ""
     echo -e "${YELLOW}[WARNING] 未找到配置文件: $CONFIG_PATH${NC}"
     echo ""
-    echo "  请先运行以下命令生成默认配置："
+    echo "  请先创建配置文件。可以复制示例配置："
     echo ""
-    echo -e "    ${CYAN}$PYTHON_CMD -m nanobot onboard${NC}"
+    echo -e "    ${CYAN}cp config.example.json $CONFIG_PATH${NC}"
     echo ""
-    echo "  然后编辑配置文件，添加您的 Bot 和飞书设置："
+    echo "  然后编辑配置文件，填入 API Key 和飞书应用凭证："
     echo ""
     echo -e "    ${CYAN}nano $CONFIG_PATH${NC}"
     echo ""
-    echo "  配置模板可参考项目中的 config.example.json 文件。"
+    echo "  注意：每个 Bot 需要独立的飞书应用 (appId + appSecret)。"
     echo ""
     exit 1
 fi
@@ -102,7 +112,7 @@ fi
 echo -e "${GREEN}[OK]${NC} 配置文件: $CONFIG_PATH"
 
 # -------------------------------------------
-# 5. 显示当前 Bot 状态
+# 6. 显示当前 Bot 状态
 # -------------------------------------------
 echo ""
 echo -e "${CYAN}[INFO] 当前 Bot 状态：${NC}"
@@ -110,16 +120,18 @@ $PYTHON_CMD -m nanobot status
 echo ""
 
 # -------------------------------------------
-# 6. 启动 Gateway
+# 7. 启动 Gateway (进程隔离模式)
 # -------------------------------------------
-echo -e "${CYAN}[INFO] 正在启动 nanobot 多 Bot 网关...${NC}"
-echo -e "${CYAN}[INFO] 按 Ctrl+C 停止所有 Bot。${NC}"
+echo -e "${CYAN}[INFO] 正在启动多 Bot 网关 (进程隔离模式)...${NC}"
+echo -e "${CYAN}[INFO] 每个 Bot 作为独立进程运行，拥有独立的飞书连接${NC}"
+echo -e "${CYAN}[INFO] 如果某个 Bot 崩溃，将自动重启${NC}"
+echo -e "${CYAN}[INFO] 按 Ctrl+C 停止所有 Bot${NC}"
 echo ""
 
 # 捕获 Ctrl+C 信号，优雅退出
-trap 'echo ""; echo -e "${YELLOW}[INFO] 正在停止所有 Bot...${NC}"; exit 0' INT TERM
+trap 'echo ""; echo -e "${YELLOW}[INFO] 正在停止所有 Bot 进程...${NC}"; exit 0' INT TERM
 
-$PYTHON_CMD -m nanobot gateway
+$PYTHON_CMD -m nanobot gateway --verbose
 
 echo ""
 echo -e "${GREEN}[INFO] Gateway 已停止。${NC}"
