@@ -109,6 +109,28 @@ class ToolsConfig(BaseModel):
     exec: ExecToolConfig = Field(default_factory=ExecToolConfig)
 
 
+# ============================================================================
+# Multi-Bot Configuration (chat-bot branch)
+# ============================================================================
+
+
+class BotConfig(BaseModel):
+    """Configuration for a single bot instance in multi-bot mode."""
+    name: str = "nanobot"  # Display name for the bot
+    model: str = "glm-4"  # LLM model to use
+    api_key: str = ""  # API key for the LLM provider
+    api_base: str | None = None  # Optional custom API base URL
+    persona: str = ""  # Optional persona/role description for the bot
+
+
+class MultiBotConfig(BaseModel):
+    """Multi-bot group chat configuration."""
+    enabled: bool = False  # Whether multi-bot mode is enabled
+    reply_delay_min: float = 2.0  # Minimum delay (seconds) before a bot replies
+    reply_delay_max: float = 5.0  # Maximum delay (seconds) before a bot replies
+    max_rounds_per_topic: int = 3  # Max rounds each bot can reply per topic to avoid infinite loops
+
+
 class Config(BaseSettings):
     """Root configuration for nanobot."""
     agents: AgentsConfig = Field(default_factory=AgentsConfig)
@@ -117,10 +139,19 @@ class Config(BaseSettings):
     gateway: GatewayConfig = Field(default_factory=GatewayConfig)
     tools: ToolsConfig = Field(default_factory=ToolsConfig)
     
+    # Multi-bot configuration
+    bots: list[BotConfig] = Field(default_factory=list)  # List of bot instances
+    multi_bot: MultiBotConfig = Field(default_factory=MultiBotConfig)  # Multi-bot settings
+    
     @property
     def workspace_path(self) -> Path:
         """Get expanded workspace path."""
         return Path(self.agents.defaults.workspace).expanduser()
+    
+    @property
+    def is_multi_bot_mode(self) -> bool:
+        """Check if multi-bot mode is active (bots list is non-empty)."""
+        return len(self.bots) > 0
     
     def _match_provider(self, model: str | None = None) -> ProviderConfig | None:
         """Match a provider based on model name."""

@@ -157,8 +157,72 @@ def gateway(
     port: int = typer.Option(18790, "--port", "-p", help="Gateway port"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output"),
 ):
-    """Start the nanobot gateway."""
+    """Start the nanobot gateway (supports both single-bot and multi-bot modes)."""
     from nanobot.config.loader import load_config, get_data_dir
+    from nanobot.bus.queue import MessageBus
+    from nanobot.channels.manager import ChannelManager
+    
+    if verbose:
+        import logging
+        logging.basicConfig(level=logging.DEBUG)
+    
+    config = load_config()
+    
+    # Detect mode: multi-bot or single-bot
+    if config.is_multi_bot_mode:
+        _run_multi_bot_gateway(config, port)
+    else:
+        _run_single_bot_gateway(config, port)
+
+
+def _run_multi_bot_gateway(config, port: int):
+    """Run gateway in multi-bot mode."""
+    from nanobot.bus.queue import MessageBus
+    from nanobot.channels.manager import ChannelManager
+    from nanobot.bot_manager import MultiBotManager
+    
+    console.print(f"{__logo__} Starting nanobot gateway in [bold green]MULTI-BOT[/bold green] mode...")
+    console.print(f"  Bots configured: {len(config.bots)}")
+    
+    for i, bot in enumerate(config.bots):
+        console.print(f"  [{i+1}] {bot.name} (model: {bot.model})")
+    
+    # Create components
+    bus = MessageBus()
+    
+    # Create multi-bot manager
+    bot_manager = MultiBotManager(config, bus)
+    
+    status = bot_manager.get_status()
+    console.print(f"[green]✓[/green] {status['bot_count']} bots initialized")
+    
+    # Create channel manager
+    channels = ChannelManager(config, bus)
+    
+    if channels.enabled_channels:
+        console.print(f"[green]✓[/green] Channels enabled: {', '.join(channels.enabled_channels)}")
+    else:
+        console.print("[yellow]Warning: No channels enabled. Enable feishu in config.json.[/yellow]")
+    
+    console.print(f"[green]✓[/green] Multi-bot gateway ready on port {port}")
+    console.print("[dim]Bots will respond to group messages collaboratively.[/dim]")
+    
+    async def run():
+        try:
+            await asyncio.gather(
+                bot_manager.run(),
+                channels.start_all(),
+            )
+        except KeyboardInterrupt:
+            console.print("\nShutting down...")
+            bot_manager.stop()
+            await channels.stop_all()
+    
+    asyncio.run(run())
+
+
+def _run_single_bot_gateway(config, port: int):
+    """Run gateway in traditional single-bot mode."""
     from nanobot.bus.queue import MessageBus
     from nanobot.providers.litellm_provider import LiteLLMProvider
     from nanobot.agent.loop import AgentLoop
@@ -166,14 +230,9 @@ def gateway(
     from nanobot.cron.service import CronService
     from nanobot.cron.types import CronJob
     from nanobot.heartbeat.service import HeartbeatService
+    from nanobot.config.loader import get_data_dir
     
-    if verbose:
-        import logging
-        logging.basicConfig(level=logging.DEBUG)
-    
-    console.print(f"{__logo__} Starting nanobot gateway on port {port}...")
-    
-    config = load_config()
+    console.print(f"{__logo__} Starting nanobot gateway in [bold cyan]SINGLE-BOT[/bold cyan] mode on port {port}...")
     
     # Create components
     bus = MessageBus()
@@ -389,8 +448,31 @@ def channels_status():
         "✓" if tg.enabled else "✗",
         tg_config
     )
+    
+    # Feishu
+    fs = config.channels.feishu
+    fs_config = f"appId: {fs.app_id[:10]}..." if fs.app_id else "[dim]not configured[/dim]"
+    table.add_row(
+        "Feishu",
+        "✓" if fs.enabled else "✗",
+        fs_config
+    )
 
     console.print(table)
+    
+    # Show multi-bot status if configured
+    if config.is_multi_bot_mode:
+        console.print(f"\n[bold green]Multi-Bot Mode[/bold green]: {len(config.bots)} bots configured")
+        bot_table = Table(title="Bot Instances")
+        bot_table.add_column("Name", style="cyan")
+        bot_table.add_column("Model", style="green")
+        bot_table.add_column("Persona", style="yellow")
+        
+        for bot in config.bots:
+            persona_display = bot.persona[:40] + "..." if len(bot.persona) > 40 else bot.persona
+            bot_table.add_row(bot.name, bot.model, persona_display or "[dim]default[/dim]")
+        
+        console.print(bot_table)
 
 
 def _get_bridge_dir() -> Path:
@@ -646,21 +728,35 @@ def status():
     console.print(f"Workspace: {workspace} {'[green]✓[/green]' if workspace.exists() else '[red]✗[/red]'}")
 
     if config_path.exists():
-        console.print(f"Model: {config.agents.defaults.model}")
+        # Check mode
+        if config.is_multi_bot_mode:
+            console.print(f"\nMode: [bold green]Multi-Bot[/bold green] ({len(config.bots)} bots)")
+            for i, bot in enumerate(config.bots):
+                has_key = "✓" if bot.api_key else "✗"
+                console.print(f"  [{i+1}] {bot.name} (model: {bot.model}) API: {'[green]' + has_key + '[/green]' if bot.api_key else '[red]' + has_key + '[/red]'}")
+        else:
+            console.print(f"\nMode: [bold cyan]Single-Bot[/bold cyan]")
+            console.print(f"Model: {config.agents.defaults.model}")
+            
+            # Check API keys
+            has_openrouter = bool(config.providers.openrouter.api_key)
+            has_anthropic = bool(config.providers.anthropic.api_key)
+            has_openai = bool(config.providers.openai.api_key)
+            has_gemini = bool(config.providers.gemini.api_key)
+            has_vllm = bool(config.providers.vllm.api_base)
+            
+            console.print(f"OpenRouter API: {'[green]✓[/green]' if has_openrouter else '[dim]not set[/dim]'}")
+            console.print(f"Anthropic API: {'[green]✓[/green]' if has_anthropic else '[dim]not set[/dim]'}")
+            console.print(f"OpenAI API: {'[green]✓[/green]' if has_openai else '[dim]not set[/dim]'}")
+            console.print(f"Gemini API: {'[green]✓[/green]' if has_gemini else '[dim]not set[/dim]'}")
+            vllm_status = f"[green]✓ {config.providers.vllm.api_base}[/green]" if has_vllm else "[dim]not set[/dim]"
+            console.print(f"vLLM/Local: {vllm_status}")
         
-        # Check API keys
-        has_openrouter = bool(config.providers.openrouter.api_key)
-        has_anthropic = bool(config.providers.anthropic.api_key)
-        has_openai = bool(config.providers.openai.api_key)
-        has_gemini = bool(config.providers.gemini.api_key)
-        has_vllm = bool(config.providers.vllm.api_base)
-        
-        console.print(f"OpenRouter API: {'[green]✓[/green]' if has_openrouter else '[dim]not set[/dim]'}")
-        console.print(f"Anthropic API: {'[green]✓[/green]' if has_anthropic else '[dim]not set[/dim]'}")
-        console.print(f"OpenAI API: {'[green]✓[/green]' if has_openai else '[dim]not set[/dim]'}")
-        console.print(f"Gemini API: {'[green]✓[/green]' if has_gemini else '[dim]not set[/dim]'}")
-        vllm_status = f"[green]✓ {config.providers.vllm.api_base}[/green]" if has_vllm else "[dim]not set[/dim]"
-        console.print(f"vLLM/Local: {vllm_status}")
+        # Feishu status
+        fs = config.channels.feishu
+        console.print(f"\nFeishu: {'[green]✓ enabled[/green]' if fs.enabled else '[dim]disabled[/dim]'}")
+        if fs.app_id:
+            console.print(f"  App ID: {fs.app_id[:10]}...")
 
 
 if __name__ == "__main__":

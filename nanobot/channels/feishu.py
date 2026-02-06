@@ -221,8 +221,10 @@ class FeishuChannel(BaseChannel):
             while len(self._processed_message_ids) > 1000:
                 self._processed_message_ids.popitem(last=False)
             
-            # Skip bot messages
+            # Get sender type (user or bot)
             sender_type = sender.sender_type
+            
+            # Skip bot messages to avoid self-loop
             if sender_type == "bot":
                 return
             
@@ -246,7 +248,7 @@ class FeishuChannel(BaseChannel):
             if not content:
                 return
             
-            # Forward to message bus
+            # Forward to message bus with sender_type metadata
             reply_to = chat_id if chat_type == "group" else sender_id
             await self._handle_message(
                 sender_id=sender_id,
@@ -256,6 +258,7 @@ class FeishuChannel(BaseChannel):
                     "message_id": message_id,
                     "chat_type": chat_type,
                     "msg_type": msg_type,
+                    "sender_type": sender_type,  # Pass sender_type for multi-bot filtering
                 }
             )
             

@@ -58,7 +58,7 @@ def save_config(config: Config, config_path: Path | None = None) -> None:
     data = convert_to_camel(data)
     
     with open(path, "w") as f:
-        json.dump(data, f, indent=2)
+        json.dump(data, f, indent=2, ensure_ascii=False)
 
 
 def convert_keys(data: Any) -> Any:
